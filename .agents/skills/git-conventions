@@ -1,0 +1,39 @@
+---
+name: git-conventions
+description: Estandariza la creación de ramas, mensajes de commit (Conventional Commits) y flujo de Pull Requests hacia main.
+triggers:
+  - crear rama
+  - hacer commit
+  - guardar cambios en git
+  - preparar pull request
+---
+
+# Skill: Convenciones de Git y Control de Versiones
+
+## 1. Propósito
+Garantizar un historial de Git limpio, semántico y auditable durante el desarrollo incremental por etapas, impidiendo modificaciones directas sobre la rama de producción (`main`).
+
+## 2. Reglas de Nomenclatura de Ramas (Branches)
+- **PROHIBIDO** hacer commits directos sobre `main`.
+- Toda nueva etapa o módulo debe crear una rama siguiendo el patrón:
+  - `feat/<modulo>-<descripcion-corta>` (Ej: `feat/etl-normalizacion-3fn`, `feat/ui-formulario-oltp`)
+  - `fix/<modulo>-<defecto>` (Ej: `fix/ui-sanitizacion-inputs`)
+  - `test/<modulo>-<alcance>` (Ej: `test/etl-whitebox-validacion`)
+  - `docs/<archivo>` (Ej: `docs/actualizacion-der`)
+
+## 3. Formato de Mensajes de Commit (Conventional Commits)
+Cada commit debe seguir la estructura:
+`<tipo>(<alcance>): <descripción imperativa en minúsculas sin punto final>`
+
+- **Tipos permitidos:** `feat`, `fix`, `test`, `refactor`, `docs`, `chore`.
+- **Alcances permitidos:** `db`, `etl`, `ui`, `security`, `docs`.
+- **Ejemplos válidos:**
+  - `feat(etl): implementar calculo automatico de cantidad de operaciones`
+  - `feat(ui): construir cuadro de mando comparativo seccion 11 vs 12`
+  - `test(etl): agregar pruebas de caja blanca para coherencia de uso de excel`
+
+## 4. Criterio de Verificación Pre-Commit
+Antes de ejecutar `git commit`, el agente debe verificar:
+- [ ] ¿Se ejecutó `pytest` sin errores?
+- [ ] ¿Se verificó que `.env` y `__pycache__/` están en `.gitignore`?
+- [ ] ¿El Agente Backend aprobó la auditoría de seguridad si hubo cambios en `src/ui/`?
