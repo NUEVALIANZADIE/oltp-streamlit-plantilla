@@ -1,147 +1,215 @@
-# VIBECODING SESSION: CREA TU PROPIO SISTEMA OLTP + STREAMLIT
-## Guía Metodológica, Arquitectura de Datos y Orquestación Multi-Agente
+# GUÍA DEFINITIVA DE VIBECODING: CREA TU PROPIO SISTEMA OLTP PARA INVESTIGACIONES ESTADÍSTICAS
+## Cómo Orquestar Agentes de Inteligencia Artificial para Superar a Google Forms con Ingeniería de Datos y Rigor Metodológico
 
 **Institución:** Escuela de Estadística y Ciencias Actuariales (EECA - UCV)  
 **IDE Agéntico:** Google Antigravity  
-**Stack Tecnológico:** Python 3.10+, Streamlit, Pandas, Matplotlib, Supabase Cloud (PostgreSQL)  
-**Propósito Didáctico:** Documento integral de referencia para estudiantes y docentes que explica cómo construir un sistema transaccional en tiempo real (OLTP) acoplado a un micro-ETL y un Cuadro de Mando estadístico, utilizando agentes especializados de Inteligencia Artificial sin improvisación.
+**Stack Tecnológico Base:** Python 3.10+, Streamlit, Pandas, Matplotlib y Supabase Cloud (PostgreSQL)  
+**Propósito y Visión Pedagógica:**  
+Esta guía no es simplemente el instructivo de un caso particular: **es una metodología de trabajo universal y replicable**. Enseña a los estudiantes y docentes de la EECA cómo prescindir de herramientas limitadas como Google Forms y construir, mediante la orquestación de agentes de IA (*Vibecoding* con rigor), **sistemas transaccionales propios (OLTP)** con micro-ETL en tiempo real y cuadros de mando de alta precisión analítica, aplicables a cualquier investigación estadística futura.
 
 ---
 
-## 🎯 Meta General del Proyecto (Goal)
+## 🧭 1. El Manifiesto: Dejar de "Recoger Datos" para Empezar a "Diseñar Sistemas OLTP"
 
-Desarrollar una aplicación web interactiva en **Streamlit** utilizando como IDE agéntico **Google Antigravity**, creando un sistema **OLTP** (*Online Transaction Processing*) para capturar información mediante un formulario dinámico desplegado en la nube, procesado mediante un **pipeline ETL integrado en tiempo real**:
+Tradicionalmente, en las investigaciones universitarias la recolección de datos se delega a hojas de cálculo planas o herramientas como Google Forms. Aunque son accesibles, presentan fallas estructurales graves para el rigor estadístico:
+
+| Dimensión | Enfoque Empírico (Google Forms / CSV) | Enfoque de Ingeniería de Datos (OLTP + 3FN en la Nube) |
+| :--- | :--- | :--- |
+| **Integridad de Registros** | Respuestas duplicadas frecuentes; no hay claves primarias ni restricciones a nivel de motor. | **Blindaje relacional:** Cédula como `PRIMARY KEY`, correo `UNIQUE` y restricciones compuestas que impiden matemáticamente el doble registro. |
+| **Variables de Selección Múltiple** | Se guardan como texto separado por comas (`Sumar, Restar`), violando la Primera Forma Normal (1FN) y obligando a búsquedas lentas (`LIKE %...%`). | **Desacoplamiento $N:M$:** Catálogos normalizados y tablas intermedias/puente donde cada selección es un registro atómico indexado. |
+| **Inconsistencias Lógicas** | El usuario responde *"Sé 3 operaciones"* y marca 2 en la lista siguiente (error de medición humano inevitable). | **Cálculo automático en el ETL:** El usuario solo marca las opciones y el motor calcula $\text{cantidad} = \operatorname{len}(\text{items})$, garantizando coherencia absoluta. |
+| **Tiempo Real y Análisis** | Requiere exportar un CSV manualmente, limpiarlo en Excel o R y rearmar gráficos estáticos. | **Micro-ETL Síncrono:** La transacción ingresa en Postgres y actualiza al instante un Cuadro de Mando con métricas formales ($\bar{x}$, $Mo$, $S$, $CV\%$, Asimetría y Curtosis). |
+
+---
+
+## 🎯 2. La Arquitectura Universal: Micro-ETL en Tiempo Real con Streamlit + Supabase
+
+Todo sistema OLTP desarrollado con esta plantilla sigue un flujo de tres etapas ejecutado en milisegundos en la misma sesión:
 
 ```
- ┌──────────────────────┐       ┌────────────────────────┐       ┌──────────────────────┐
- │   EXTRACCIÓN (E)     │  ──►  │   TRANSFORMACIÓN (T)   │  ──►  │      CARGA (L)       │
- │ Formulario Streamlit │       │ Validación, Limpieza y │       │ Base 3FN en Supabase │
- │ (Widgets Reactivos)  │       │ Cálculo Automático RAM │       │ + Caché en Dashboard │
- └──────────────────────┘       └────────────────────────┘       └──────────────────────┘
+┌─────────────────────────────────┐
+│     1. EXTRACCIÓN (Extract)     │ ──► El encuestado responde en Streamlit (UI Mobile-First).
+└────────────────┬────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────┐
+│   2. TRANSFORMACIÓN (Transform) │ ──► Limpieza de strings, tipificación estricta de variables
+│       (En memoria RAM)          │     y cálculo de variables derivadas en Python.
+└────────────────┬────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────┐
+│       3. CARGA (Load - OLTP)    │ ──► Inserción atómica en Supabase vía SDK (3FN).
+│       (PostgreSQL Cloud)        │     Si la cédula/correo ya existen, la BD rechaza el duplicado.
+└────────────────┬────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────┐
+│  4. INVALIDACIÓN INTELIGENTE    │ ──► st.cache_data.clear() refresca el Dashboard
+│      (Cero Gasto de Cuota)      │     sin saturar la capa gratuita de Supabase.
+└─────────────────────────────────┘
 ```
 
-1. **Extracción (Extract):** Captura síncrona de los datos ingresados en el formulario web de Streamlit, mapeando cada campo hacia las variables del instrumento de recolección.
-2. **Transformación (Transform):** Conversión de las respuestas en registros relacionales normalizados en **Tercera Forma Normal (3FN)**. Un sistema OLTP captura transacciones del día a día con total integridad y cero redundancia.
-3. **Carga (Load):** Inserción atómica en **Supabase** (PostgreSQL en la nube sin costo de servidores dedicados) y visualización en tiempo real en un Cuadro de Mando descriptivo con protección de cuota mediante `@st.cache_data`.
+---
+
+## 🛑 3. Lo que Nadie te Cuenta: El Checklist Previo a la Orquestación Agéntica
+
+> *"Antes de sentarse a escribir prompts o pedirle código a un modelo de lenguaje, hay que verificar este checklist. Si no tienes resuelto el diseño metodológico y la arquitectura de datos, el agente solo generará código basura que aparenta funcionar pero carece de rigor."*
+
+- [x] **1. Investigación Bien Planteada:**  
+  Planteamiento del problema, objetivos claros y matriz de operacionalización de variables: distinguir dimensiones, escalas de medición (nominal, ordinal, razón, intervalo) e indicadores estadísticos requeridos.
+- [x] **2. Modelo Relacional en Tercera Forma Normal (3FN):**  
+  Tener diseñado el Diagrama Entidad-Relación (DER), definir claves primarias naturales o subrogadas (`UUID` / Cédula), claves foráneas (`FOREIGN KEY`), tablas puente para relaciones $N:M$ y políticas de seguridad (`Row Level Security - RLS`).
+- [x] **3. Stack Tecnológico Justificado:**  
+  Python (3.10+), Streamlit (Frontend interactivo), Pandas (procesamiento matricial), Matplotlib (visualización científica con estilo editorial) y Supabase SDK (`supabase-py` para evitar consultas SQL concatenadas en texto).
+- [x] **4. Reglas Directivas del IDE (`rules.md` / `AGENTS.md`):**  
+  Restricciones claras para los agentes: qué carpetas pueden tocar, qué archivos son intocables (`.env`, `requirements.txt`) y qué convenciones de código deben obedecer.
+- [x] **5. Habilidades Modulares (Agent Skills):**  
+  Especializar al agente con guías de ejecución reutilizables (`SKILL.md`) para tareas críticas (Supabase SDK, convenciones de Git y pruebas de caja blanca con `pytest`).
+- [x] **6. Estrategia de Gestión de Contexto:**  
+  Desacoplar la memoria del proyecto en documentos de especificación dentro de `docs/`. Así, cualquier nuevo caso de estudio solo requiere cambiar los archivos de `docs/` sin alterar la arquitectura base.
+- [x] **7. Guardarraíles Humanos Obligatorios:**  
+  Ningún código generado por IA pasa a ramas principales sin validación de pruebas unitarias (`pytest`) y revisión humana explícita (*Code Review*).
 
 ---
 
-## 🛑 Lo que nadie te cuenta: El Checklist Previo Obligatorio
+## 📦 4. Anatomía del Repositorio Boilerplate Reutilizable
 
-> *"Antes de sentarse a orquestar un agente de inteligencia artificial, hay que verificar el siguiente checklist. Sin esto, el resto del trabajo es improvisación y termina en información que no sirve para nada más que para aparentar."*
-
-- [x] **¿La investigación está bien planteada?**  
-  Se debe contar con el diseño metodológico completo: planteamiento del problema, finalidad, hipótesis u objetivos y operacionalización rigurosa de variables (diferenciando dimensiones, variables complejas e indicadores estadísticos).
-- [x] **¿Tenemos claro el diseño de la base de datos?**  
-  Saber cómo garantizar consistencia, restricciones de unicidad (`UNIQUE`), integridad referencial (claves foráneas) y seguridad (`Row Level Security - RLS`). Entender las reglas de cada variable y que la estructura relacional responda a la finalidad analítica del estudio.
-- [x] **¿Tenemos el stack tecnológico completo y justificado?**  
-  Saber bajo qué entorno trabajará el agente: Python, Streamlit, Pandas, Matplotlib y el SDK de Supabase (`supabase-py`). El SDK permite operar PostgreSQL desde la nube mediante PostgREST sin añadir drivers pesados ni exponer credenciales directas en la interfaz.
-- [x] **¿Están definidos los archivos de reglas del IDE (`rules.md` / `AGENTS.md`)?**  
-  Directivas inquebrantables de arquitectura, estándares de código (3FN, type hints, cero SQL concatenado) y restricciones técnicas para que el agente programe alineado y sin alucinaciones.
-- [x] **¿Está estructurada la modularización mediante Agent Skills?**  
-  Carpetas e instrucciones especializadas (`SKILL.md`) para desacoplar tareas (convenciones de Git, pruebas unitarias de caja blanca, buenas prácticas de Postgres).
-- [x] **¿Se cuenta con una estrategia de gestión de contexto?**  
-  Separar la arquitectura en documentos modulares (`docs/`) para evitar la degradación o fatiga del prompt en conversaciones largas.
-- [x] **¿Está definido el flujo de pruebas y guardarraíles humanos?**  
-  Pruebas unitarias de caja blanca con `pytest` y validación humana obligatoria (*Code Review*) antes de fusionar cualquier código a ramas de producción.
-
----
-
-## 📋 FASE 1: Construcción del Repositorio Base (El Boilerplate Reutilizable)
-
-El objetivo pedagógico es demostrar que **la arquitectura para agentes de IA no se improvisa desde cero en cada proyecto**. Se construye un esqueleto estandarizado una sola vez para que cualquier estudiante pueda hacer un *fork*, manteniendo intactas las reglas, los roles y las habilidades, adaptando únicamente los documentos de contexto dentro de `docs/`.
-
-### 1.1 Estructura del Repositorio
+Esta plantilla fue diseñada para que **cualquier estudiante o equipo de investigación de la EECA pueda hacer un `Fork` en GitHub** y montar su propio sistema en minutos:
 
 ```text
 oltp-streamlit-plantilla/
 ├── .antigravity/
-│   └── rules.md                # Directivas globales de arquitectura, roles y seguridad
+│   └── rules.md                # Directivas maestras del sistema y delimitación de roles
 ├── .agents/
-│   ├── AGENTS.md               # Manifiesto de orquestación y catálogo de roles
-│   └── skills/                 # Habilidades modulares del agente
-│       ├── supabase/           # Skill de Supabase SDK y Postgres best practices
-│       ├── git-conventions/    # Convención estricta de ramas y commits
-│       └── pytest-whitebox/    # Pruebas automatizadas de caja blanca
-├── docs/                       # Documentos de contexto del caso de estudio
-│   ├── research_design.md      # Planteamiento y operacionalización de variables
-│   ├── etl_system_design.md    # Modelo relacional 3FN, DER y arquitectura ETL
-│   ├── brand_book.md           # Identidad visual, tipografías y diseño del dashboard
-│   ├── target_audience.md      # Perfiles de usuario (Estudiantes vs. Coordinación)
+│   ├── AGENTS.md               # Catálogo de roles (@backend-dba y @frontend-ui)
+│   └── skills/                 # Habilidades agénticas especializadas
+│       ├── supabase/           # Buenas prácticas de Postgres y SDK de Supabase
+│       ├── git-conventions/    # Convenciones semánticas de ramas y commits
+│       └── pytest-whitebox/    # Automatización de pruebas de caja blanca
+├── docs/                       # EL CORAZÓN DEL CONTEXTO (Se adapta para cada investigación)
+│   ├── research_design.md      # Diseño metodológico y operacionalización de variables
+│   ├── etl_system_design.md    # Esquema relacional en 3FN, DER y arquitectura ETL
+│   ├── brand_book.md           # Identidad visual, paleta, fuentes y assets
+│   ├── target_audience.md      # Perfil de usuario móvil (encuestados) y directivo (docentes)
 │   └── pedagogical_guide.md    # Bitácora didáctica desarrollada durante la sesión
-├── assets/                     # Recursos gráficos del proyecto
+├── assets/                     # Recursos gráficos institucionales
 │   └── img/
 │       ├── icons/              # Íconos temáticos (Flaticon)
-│       └── references/         # Maquetas visuales del Dashboard
+│       └── references/         # Maquetas de diseño deseadas
 ├── src/
-│   ├── database/               # Conexión singleton y schema DDL
-│   ├── etl/                    # Validación (T), Transacción (L) y Consultas Dashboard
-│   └── ui/                     # Formulario y Cuadro de Mando en Streamlit
-├── tests/                      # Suite de pruebas unitarias (pytest)
-├── requirements.txt            # Dependencias oficiales de Python
-└── main.py                     # Punto de entrada de la aplicación Streamlit
+│   ├── database/               # Conexión singleton y script DDL de creación de tablas
+│   ├── etl/                    # Lógica de Validación (T), Inserción OLTP (L) y Métricas
+│   └── ui/                     # Formulario y Cuadro de Mando interactivo
+├── tests/                      # Suite de pruebas unitarias de caja blanca (pytest)
+└── main.py                     # Punto de entrada de la aplicación en Streamlit
 ```
 
-### 1.2 Reglas Innegociables de Arquitectura (`.antigravity/rules.md`)
-1. **Stack Exclusivo:** Python 3.10+, Streamlit, Pandas, Matplotlib y Supabase SDK. Prohibido agregar ORMs pesados o SQL concatenado en strings.
-2. **División de Roles:**
-   - **`@backend-dba`:** Exclusivo para `src/database/`, `src/etl/` y `tests/`.
-   - **`@frontend-ui`:** Exclusivo para `src/ui/` y `main.py`.
-3. **Auditoría Cruzada:** El Backend audita al Frontend línea por línea certificando cero inyecciones XSS/HTML, cero fugas de `SUPABASE_KEY` y cero consultas directas fuera del caché.
-4. **Protección de Capa Gratuita:** El dashboard utiliza `@st.cache_data(ttl=900)`. Solo se invalida la memoria cuando ocurre una inserción transaccional exitosa (`st.cache_data.clear()`).
-5. **Archivos Intocables por Agentes:** `.env`, `requirements.txt` y `.antigravity/rules.md`.
+---
+
+## 🛠️ 5. Paso a Paso: Cómo Crear y Configurar tu Propio Proyecto en Supabase
+
+Supabase ofrece una base de datos PostgreSQL completa en la nube con capa gratuita para hospedar las transacciones del sistema sin costo de infraestructura. Sigue estos pasos para aprovisionar tu entorno:
+
+### Paso 5.1: Crear la Cuenta y el Proyecto
+1. Ingresa a [https://supabase.com](https://supabase.com) e inicia sesión con tu cuenta de **GitHub**.
+2. En el panel principal (Dashboard), haz clic en el botón verde **"New Project"**.
+3. Selecciona tu organización personal y completa el formulario:
+   - **Name (Nombre del Proyecto):** Asigna un nombre representativo (ej: `oltp-eeca-excel` o el nombre de tu investigación).
+   - **Database Password (Contraseña):** Define una contraseña segura y **anótala de inmediato en un lugar seguro**. La necesitarás si deseas conectar herramientas externas o el CLI.
+   - **Region:** Selecciona la región geográfica más cercana (por ejemplo: `South America (São Paulo)` o `US East (North Virginia)`) para minimizar la latencia.
+   - **Pricing Plan:** Elige el plan **Free** ($0/mes).
+4. Haz clic en **"Create new project"** y espera aproximadamente 1 a 2 minutos mientras Supabase aprovisiona el clúster de Postgres.
+
+### Paso 5.2: Obtener las Credenciales de Conexión (API Keys)
+Una vez que el proyecto esté listo:
+1. En el menú lateral izquierdo, haz clic en el icono de engranaje **Project Settings** (abajo del todo).
+2. Selecciona la pestaña **API** (o en la nueva interfaz, **API Keys**):
+   - **Project URL:** Es la dirección base de tu API (ej: `https://xxxxxxxxxxxxxxxxxxxx.supabase.co`). Copia este valor para tu variable `SUPABASE_URL`.
+   - **Project API Keys:** 
+     - Copia la clave **`anon` / `publishable`** (empieza por `sb_publishable_...` o un JWT). Esta es la que se usa para clientes públicos con políticas RLS.
+     - Si requieres la clave administrativa para migraciones internas, localiza la **`service_role` / `secret key`** (empieza por `sb_secret_...`). **Nunca expongas esta clave en repositorios públicos**.
+
+### Paso 5.3: Configurar las Variables de Entorno Locales
+En la raíz de tu proyecto local, crea un archivo llamado `.env` (el cual ya está protegido en `.gitignore` para no subirse a GitHub):
+```env
+SUPABASE_URL=https://tu-proyecto-id.supabase.co
+SUPABASE_KEY=tu_clave_anon_o_publishable_aqui
+SUPABASE_SECRET_KEY=tu_clave_secreta_aqui
+```
+
+### Paso 5.4: Ejecutar el Esquema Relacional (DDL) en el SQL Editor
+1. En el panel de Supabase, haz clic en **SQL Editor** en el menú lateral izquierdo (icono con corchetes `>_`).
+2. Haz clic en **"New Query"** (o presiona `+`).
+3. Abre el archivo `src/database/schema.sql` de tu repositorio, copia todo su contenido y pégalo en el editor de Supabase.
+4. Presiona el botón verde **Run** (o `Ctrl + Enter`):
+   - Esto creará los catálogos con sus registros iniciales, las tablas normalizadas (`estudiantes`, `encuestas_estudiantes`), la tabla puente (`encuesta_operaciones`), los índices de rendimiento y las políticas de seguridad **RLS** (*Row Level Security*).
+5. Ve a **Table Editor** en el menú izquierdo para verificar visualmente que las tablas se hayan creado con sus columnas y relaciones correctas.
 
 ---
 
-## 🔬 FASE 2: Inyección de Contexto del Caso de Estudio (`docs/`)
+## 🔄 6. Cómo Replicar este Método para CUALQUIER Investigación de la Escuela
 
-Hacemos un *fork* del boilerplate y adaptamos los 4 documentos base para el caso real: **Evaluación del Nivel de Manejo de Excel en el Propedéutico de la EECA-UCV (Secciones 11 y 12)**.
+Para aplicar esta arquitectura a un nuevo trabajo de grado, pasantía o estudio estadístico:
 
-### 2.1 Rediseño Metodológico (De Google Forms a OLTP en 3FN)
-
-| Variable en Estudio | Tipo y Escala | Corrección Aplicada en el Sistema OLTP |
-| :--- | :--- | :--- |
-| **Identificación** | Nominal / Identidad | Tabla maestra `estudiantes` con `cedula PRIMARY KEY` y `correo UNIQUE`. Impide duplicados en la base de datos. |
-| **Sección** | Nominal Dicotómica | Clave foránea hacia `cat_secciones` (`11: Sección 11`, `12: Sección 12`). |
-| **Edad** | Cuantitativa Discreta | Entero validado en el rango cerrado `15 <= edad <= 75` años (elimina texto libre). |
-| **Género** | Nominal Dicotómica | Restricción controlada a `'Femenino'` o `'Masculino'`. |
-| **Uso Previo de Excel** | Nominal Booleana | Booleano (`True` / `False`). Si es `False`, el formulario desactiva la selección de operaciones. |
-| **Cantidad de Operaciones** | Cuantitativa Discreta | **Calculada automáticamente por el ETL:** $n = \operatorname{length}(\text{operaciones})$. Elimina la contradicción humana de Google Forms. |
-| **Operaciones Dominadas** | Politómica ($N:M$) | Desacoplada en `cat_operaciones_excel` y tabla puente `encuesta_operaciones`. Cada operación es un registro atómico (1FN a 3FN). |
-| **Interés en Electiva** | Nominal Booleana | Booleano (`True` / `False`). Mide la viabilidad de apertura académica. |
-| **Herramientas en Casa** | Nominal Booleana | Booleano (`True` / `False`). Mide la disponibilidad de PC e Internet propio. |
-| **Percepción de Utilidad** | Politómica Nominal | Tipificada en 4 segmentos cerrados según la investigación de referencia. |
-| **Nivel de Autopercepción** | Ordinal (Likert) | Escala del `1` (Muy Malo) al `5` (Muy Bueno). |
+1. **Haz un Fork del repositorio base:** Tendrás toda la infraestructura de agentes y scripts lista.
+2. **Crea tu proyecto en Supabase:** Siguiendo el paso a paso de la Sección 5.
+3. **Actualiza únicamente la carpeta `docs/`:**
+   - En `research_design.md`, describe tu problema y cuadro de variables.
+   - En `etl_system_design.md`, dibuja tu DER en 3FN y las reglas de transformación.
+   - En `brand_book.md`, define los colores institucionales y el layout del dashboard.
+   - En `target_audience.md`, define quién llenará el formulario y qué directivos verán las métricas.
+4. **Ejecuta tu DDL en Supabase:** Corre el nuevo `schema.sql` en el SQL Editor.
+5. **Orquesta a los Agentes de Antigravity:** Sigue el guion de prompts en vivo de la siguiente sección.
 
 ---
 
-## 🎭 FASE 3: Guion de Ejecución en Vivo (Orquestación Paso a Paso)
+## 🎭 7. Guion de Ejecución en Vivo (Orquestación Paso a Paso)
 
-Este es el guion exacto para dirigir la sesión en vivo frente a los estudiantes:
+Este es el guion exacto para dirigir la sesión práctica frente a los estudiantes:
 
 ### Paso 1: Presentación del Boilerplate y Contexto (5 min)
-- Mostrar la estructura de carpetas, el archivo `.antigravity/rules.md` y explicar cómo la IA lee los documentos de `docs/` antes de tocar una sola línea de código.
+*Explicar cómo los documentos de `docs/` y las reglas de `.antigravity/rules.md` evitan las alucinaciones de la IA.*
 
-### Paso 2: Invocación del Agente Backend / DBA (15 min)
-**Prompt a ejecutar en vivo:**
-> *"Actúa bajo el rol de `@backend-dba` definido en `.antigravity/rules.md`. Lee `docs/research_design.md` y `docs/etl_system_design.md`. Construye en `src/database/` y `src/etl/` la conexión singleton con el SDK de Supabase, la transformación y validación de datos a 3FN, la inserción transaccional atómica y las funciones del Dashboard con caché `@st.cache_data`. Luego, genera y ejecuta las pruebas de caja blanca en `tests/` con pytest."*
+### Paso 2: Invocación del `@backend-dba` (15 min)
+**Prompt en vivo:**
+```text
+Actúa bajo el rol de @backend-dba definido en .antigravity/rules.md.
+Lee docs/research_design.md y docs/etl_system_design.md.
+Construye en src/database/ y src/etl/ la conexión singleton con el SDK de Supabase,
+la transformación y validación de datos a 3FN, la inserción transaccional atómica
+y las funciones del Dashboard con caché @st.cache_data.
+Luego, genera y ejecuta las pruebas de caja blanca en tests/ con pytest.
+```
+*Guardarraíl:* Los participantes observan la ejecución de `pytest` en la consola. Todo debe pasar en verde.
 
-- **Guardarraíl Humano:** Los estudiantes observan la ejecución de `pytest` en la terminal. Ninguna prueba debe fallar.
-
-### Paso 3: Invocación del Agente Frontend / UI (15 min)
-**Prompt a ejecutar en vivo:**
-> *"Actúa bajo el rol de `@frontend-ui` definido en `.antigravity/rules.md`. Lee `docs/brand_book.md` y `docs/target_audience.md`. Desarrolla en `src/ui/` y `main.py` el formulario dinámico mobile-first y el Cuadro de Mando estadístico comparativo (Sección 11 vs. Sección 12) usando Streamlit, Pandas y Matplotlib, consumiendo exclusivamente las funciones públicas de `src/etl/`."*
-
-- Se lanza la app con `streamlit run main.py` y se prueba el envío de respuestas en vivo desde un teléfono móvil.
+### Paso 3: Invocación del `@frontend-ui` (15 min)
+**Prompt en vivo:**
+```text
+Actúa bajo el rol de @frontend-ui definido en .antigravity/rules.md.
+Lee docs/brand_book.md y docs/target_audience.md.
+Desarrolla en src/ui/ y main.py el formulario dinámico mobile-first y el Cuadro
+de Mando estadístico comparativo usando Streamlit, Pandas y Matplotlib,
+conectándote únicamente a las funciones de src/etl/.
+```
+*Demostración:* Se abre la app (`streamlit run main.py`) y se envía un registro real desde un teléfono móvil, observando la actualización inmediata en el Cuadro de Mando.
 
 ### Paso 4: Auditoría Cruzada de Seguridad y Cierre Git (10 min)
-**Prompt a ejecutar en vivo:**
-> *"Actúa como `@backend-dba` y realiza la auditoría cruzada de seguridad sobre `src/ui/` y `main.py`. Verifica que los inputs estén sanitizados (cero inyecciones XSS/HTML), que no existan credenciales expuestas y que ninguna gráfica consulte a Supabase fuera de la capa de caché. Una vez aprobado, aplica la convención de Git para crear el commit final."*
-
-- Se genera el commit bajo la convención `feat(release): sistema oltp y dashboard eeca-ucv completado` y se abre el Pull Request.
+**Prompt en vivo:**
+```text
+Agente Backend, realiza la auditoría de seguridad sobre src/ui/ y main.py.
+Verifica que los inputs estén sanitizados (cero inyecciones XSS/HTML),
+que no existan credenciales expuestas y que ninguna gráfica consulte a Supabase
+fuera de la capa de caché.
+Una vez aprobado, aplica la skill git-conventions para crear el commit final.
+```
 
 ---
 
-## 💡 Conclusión Pedagógica
+## 🎓 Conclusión: El Verdadero Significado del "Vibecoding"
 
-El verdadero valor del **Vibecoding** no consiste en pedirle a un modelo de lenguaje que "adivine" el código, sino en **diseñar la arquitectura, las directivas y el contexto con rigor profesional**, permitiendo que los agentes de IA ejecuten la implementación técnica bajo supervisión y validación humana continua.
+El *Vibecoding* profesional en la Escuela de Estadística no consiste en pedirle a un chat de IA que adivine código desordenado. Consiste en **actuar como el Arquitecto del Sistema**:
+- Definir el rigor metodológico y estadístico.
+- Modelar datos en Tercera Forma Normal (3FN).
+- Blindar las reglas del sistema y los roles de los agentes.
+- **Dejar que la IA programe los bloques modulares bajo nuestra estricta supervisión y pruebas de calidad.**
